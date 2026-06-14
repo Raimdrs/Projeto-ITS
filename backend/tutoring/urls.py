@@ -4,4 +4,5 @@ from . import views
 urlpatterns = [
     path('recommendation/', views.RecommendationView.as_view(), name='tutor-recommendation'),
     path('feedback/<int:attempt_id>/', views.AttemptFeedbackView.as_view(), name='tutor-feedback'),
+    path('chat/', views.AITutorChatView.as_view(), name='tutor-chat'),
 ]

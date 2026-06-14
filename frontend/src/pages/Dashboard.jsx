@@ -4,7 +4,7 @@ import { studentAPI, tutorAPI } from '../api/client';
 import ProgressBar from '../components/ProgressBar';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
-import { BarChart3, CheckCircle2, Target, Clock, TrendingUp, PieChart, Bot, Trophy, AlertTriangle } from 'lucide-react';
+import { BarChart3, CheckCircle2, Target, Clock, TrendingUp, PieChart, Bot, Trophy, AlertTriangle, BookOpen } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -87,6 +87,64 @@ export default function Dashboard() {
         <p className="page-subtitle">Acompanhe seu progresso na educação financeira</p>
       </div>
 
+      {/* Tutor Recommendation Banner (Moved to TOP) */}
+      <div className="card animate-fade-in" style={{ 
+        borderColor: 'var(--accent-500)', 
+        borderWidth: '2px', 
+        marginBottom: 'var(--space-8)', 
+        background: 'linear-gradient(145deg, var(--bg-card) 0%, rgba(58, 129, 243, 0.05) 100%)',
+        boxShadow: '0 10px 25px -5px rgba(58, 129, 243, 0.1), 0 8px 10px -6px rgba(58, 129, 243, 0.1)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <h3 style={{ marginBottom: 'var(--space-2)', fontWeight: 700, fontSize: 'var(--font-size-xl)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bot size={24} className="text-accent" /> Sugestão de Estudo
+            </h3>
+            {recommendation?.message && (
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '800px', fontSize: 'var(--font-size-base)' }}>
+                {recommendation.message}
+              </p>
+            )}
+          </div>
+          <div>
+            {recommendation?.next_concept ? (
+              <button
+                className="btn btn-primary btn-lg pulse-btn"
+                style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: 'var(--font-size-lg)' }}
+                onClick={() => navigate(`/concept/${recommendation.next_concept.concept_slug}`)}
+              >
+                <BookOpen size={20} />
+                Continuar: {recommendation.next_concept.concept_name}
+              </button>
+            ) : !recommendation?.difficulty_concepts?.length ? (
+              <button className="btn btn-accent btn-lg" onClick={() => navigate('/concepts')}>
+                Explorar Módulos
+              </button>
+            ) : null}
+          </div>
+        </div>
+        
+        {recommendation?.difficulty_concepts?.length > 0 && (
+          <div style={{ marginTop: 'var(--space-5)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--warning-400)', marginBottom: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <AlertTriangle size={16} /> Foco sugerido para revisão:
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {recommendation.difficulty_concepts.map((dc, i) => (
+                <button 
+                  key={i} 
+                  className="badge" 
+                  style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning-400)', border: '1px solid rgba(245,158,11,0.2)', cursor: 'pointer' }}
+                  onClick={() => navigate(`/concept/${dc.concept_slug}`)}
+                >
+                  {dc.concept_name} ({dc.mastery_level}%)
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Stat Cards */}
       <div className="grid grid-4" style={{ marginBottom: 'var(--space-8)' }}>
         <div className="stat-card blue animate-fade-in delay-1">
@@ -111,7 +169,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Main Grid */}
+      {/* Main Grid (Charts & Achievements) */}
       <div className="grid grid-2" style={{ marginBottom: 'var(--space-8)' }}>
         {/* Mastery Chart */}
         <div className="card">
@@ -123,86 +181,47 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Progress Doughnut */}
-        <div className="card">
-          <h3 style={{ marginBottom: 'var(--space-5)', fontWeight: 700, fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PieChart size={20} className="text-accent" /> Visão Geral
-          </h3>
-          <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: '250px' }}>
-              <Doughnut data={progressDoughnut} options={{
-                responsive: true,
-                plugins: {
-                  legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 16, font: { size: 12 } } },
-                },
-                cutout: '65%',
-              }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+          {/* Progress Doughnut */}
+          <div className="card" style={{ flex: 1 }}>
+            <h3 style={{ marginBottom: 'var(--space-5)', fontWeight: 700, fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <PieChart size={20} className="text-accent" /> Visão Geral
+            </h3>
+            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '200px' }}>
+                <Doughnut data={progressDoughnut} options={{
+                  responsive: true,
+                  plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 12 } } } },
+                  cutout: '65%',
+                }} />
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="grid grid-2">
-        {/* Recommendation */}
-        <div className="card" style={{ borderColor: 'rgba(58, 129, 243, 0.3)' }}>
-          <h3 style={{ marginBottom: 'var(--space-4)', fontWeight: 700, fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bot size={20} className="text-accent" /> Recomendação do Tutor
-          </h3>
-          {recommendation?.message && (
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.7 }}>
-              {recommendation.message}
-            </p>
-          )}
-          {recommendation?.next_concept && (
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate(`/concept/${recommendation.next_concept.concept_slug}`)}
-            >
-              Estudar: {recommendation.next_concept.concept_name}
-            </button>
-          )}
-          {recommendation?.difficulty_concepts?.length > 0 && (
-            <div style={{ marginTop: 'var(--space-4)' }}>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--warning-400)', marginBottom: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertTriangle size={16} /> Conceitos com dificuldade:
-              </p>
-              {recommendation.difficulty_concepts.map((dc, i) => (
-                <div key={i} style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  • {dc.concept_name} ({dc.mastery_level}%)
-                </div>
-              ))}
-            </div>
-          )}
-          {!recommendation?.next_concept && !recommendation?.difficulty_concepts?.length && (
-            <button className="btn btn-accent" onClick={() => navigate('/concepts')}>
-              Ver Conceitos
-            </button>
-          )}
-        </div>
-
-        {/* Achievements */}
-        <div className="card">
-          <h3 style={{ marginBottom: 'var(--space-4)', fontWeight: 700, fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Trophy size={20} className="text-accent" /> Conquistas
-          </h3>
-          {stats?.achievements?.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              {stats.achievements.slice(0, 5).map(a => (
-                <div key={a.id} className="achievement-badge">
-                  <div className="achievement-icon">{a.icon}</div>
-                  <div className="achievement-info">
-                    <h4>{a.name}</h4>
-                    <p>{a.description}</p>
+          {/* Achievements (Moved here to balance layout) */}
+          <div className="card" style={{ flex: 1 }}>
+            <h3 style={{ marginBottom: 'var(--space-4)', fontWeight: 700, fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Trophy size={20} className="text-accent" /> Últimas Conquistas
+            </h3>
+            {stats?.achievements?.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                {stats.achievements.slice(0, 3).map(a => (
+                  <div key={a.id} className="achievement-badge" style={{ padding: 'var(--space-2) var(--space-3)' }}>
+                    <div className="achievement-icon" style={{ fontSize: '1.2rem', width: '32px', height: '32px' }}>{a.icon}</div>
+                    <div className="achievement-info">
+                      <h4 style={{ fontSize: 'var(--font-size-sm)' }}>{a.name}</h4>
+                      <p style={{ fontSize: 'var(--font-size-xs)' }}>{a.description}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state" style={{ padding: 'var(--space-6)' }}>
-              <div style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}><Trophy size={48} /></div>
-              <p style={{ color: 'var(--text-muted)' }}>Complete atividades para ganhar conquistas!</p>
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state" style={{ padding: 'var(--space-4)' }}>
+                <div style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}><Trophy size={32} /></div>
+                <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>Complete atividades!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

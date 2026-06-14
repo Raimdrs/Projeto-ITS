@@ -94,6 +94,7 @@ export const quizAPI = {
 export const tutorAPI = {
   recommendation: () => api.get('/tutor/recommendation/'),
   feedback: (attemptId) => api.get(`/tutor/feedback/${attemptId}/`),
+  chat: (data) => api.post('/tutor/chat/', data),
 };
 
 // Simulation API

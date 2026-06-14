@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { conceptsAPI } from '../api/client';
+import AITutorChat from '../components/AITutorChat';
+import * as LucideIcons from 'lucide-react';
+import { BookOpen, Lightbulb, Key, FileEdit, Dumbbell } from 'lucide-react';
 
 export default function Lesson() {
   const { slug } = useParams();
@@ -107,7 +110,12 @@ export default function Lesson() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
-        <span style={{ fontSize: '2.5rem' }}>{concept.icon}</span>
+        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent-500)' }}>
+          {(() => {
+            const Icon = LucideIcons[concept.icon] || LucideIcons.BookOpen;
+            return <Icon size={40} />;
+          })()}
+        </span>
         <div>
           <h1 className="page-title">{concept.name}</h1>
           <p className="page-subtitle">{concept.description}</p>
@@ -116,14 +124,14 @@ export default function Lesson() {
 
       {/* Tabs */}
       <div className="tabs">
-        <button className={`tab ${activeTab === 'theory' ? 'active' : ''}`} onClick={() => setActiveTab('theory')}>
-          📖 Aula Teórica
+        <button className={`tab ${activeTab === 'theory' ? 'active' : ''}`} onClick={() => setActiveTab('theory')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <BookOpen size={18} /> Aula Teórica
         </button>
-        <button className={`tab ${activeTab === 'examples' ? 'active' : ''}`} onClick={() => setActiveTab('examples')}>
-          💡 Exemplos Práticos
+        <button className={`tab ${activeTab === 'examples' ? 'active' : ''}`} onClick={() => setActiveTab('examples')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Lightbulb size={18} /> Exemplos Práticos
         </button>
-        <button className={`tab ${activeTab === 'keypoints' ? 'active' : ''}`} onClick={() => setActiveTab('keypoints')}>
-          🔑 Pontos-Chave
+        <button className={`tab ${activeTab === 'keypoints' ? 'active' : ''}`} onClick={() => setActiveTab('keypoints')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Key size={18} /> Pontos-Chave
         </button>
       </div>
 
@@ -133,7 +141,7 @@ export default function Lesson() {
         {activeTab === 'examples' && renderContent(lesson.practical_examples)}
         {activeTab === 'keypoints' && (
           <div>
-            <h2>🔑 Pontos-Chave</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Key size={24} className="text-accent" /> Pontos-Chave</h2>
             <ul>
               {lesson.key_points?.split(';').map((point, i) => (
                 <li key={i} style={{ marginBottom: 'var(--space-3)', fontSize: 'var(--font-size-lg)' }}>
@@ -147,13 +155,15 @@ export default function Lesson() {
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: 'var(--space-6)', justifyContent: 'center' }}>
-        <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${slug}`)}>
-          📝 Fazer Quiz
+        <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${slug}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FileEdit size={20} /> Fazer Quiz
         </button>
-        <button className="btn btn-outline btn-lg" onClick={() => navigate(`/exercises/${slug}`)}>
-          💪 Exercícios
+        <button className="btn btn-outline btn-lg" onClick={() => navigate(`/exercises/${slug}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Dumbbell size={20} /> Exercícios
         </button>
       </div>
+
+      <AITutorChat conceptSlug={slug} />
     </div>
   );
 }
