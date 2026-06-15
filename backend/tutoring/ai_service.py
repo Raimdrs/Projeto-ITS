@@ -18,9 +18,6 @@ def get_tutor_response(lesson_title, lesson_content, user_message, chat_history=
         return "⚠️ Chave da API do Gemini não encontrada. Por favor, adicione GEMINI_API_KEY no arquivo .env do backend para ativar a IA."
         
     try:
-        # We use gemini-1.5-flash as it's fast and excellent for text tasks
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
         system_instruction = f"""Você é o FinTutor, um tutor de educação financeira de alto nível acadêmico e institucional.
 O aluno está lendo neste momento uma aula intitulada '{lesson_title}'.
 Aqui está o texto completo que o aluno tem na tela:
@@ -36,7 +33,9 @@ Suas diretrizes:
 5. Se o aluno responder a uma pergunta sua, avalie se está certo ou errado baseando-se no material.
 """
         
-        messages = [{"role": "user", "parts": [system_instruction]}]
+        model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=system_instruction)
+        
+        messages = []
         
         # In Gemini API, history is passed alternately: user, model, user, model
         if chat_history:
