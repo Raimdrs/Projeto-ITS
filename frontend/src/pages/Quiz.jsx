@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { quizAPI } from '../api/client';
-import ProgressBar from '../components/ProgressBar';
+import { Box, Typography, Button, Card, CardContent, LinearProgress, Chip, TextField, CircularProgress, Alert } from '@mui/material';
+import { Lightbulb, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function Quiz() {
   const { slug } = useParams();
@@ -29,11 +30,14 @@ export default function Quiz() {
       });
   }, [slug]);
 
-  if (loading || !quizData) return <div className="loading-spinner"><div className="spinner" /></div>;
+  if (loading || !quizData) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <CircularProgress />
+    </Box>
+  );
 
   const questions = quizData.questions || [];
   const currentQuestion = questions[currentIndex];
-  const isLastQuestion = currentIndex === questions.length - 1;
 
   const handleGetHint = async () => {
     try {
@@ -69,7 +73,6 @@ export default function Quiz() {
       setAnswers([...answers, res.data]);
 
       if (res.data.is_quiz_complete) {
-        // Quiz finished — navigate to results
         setTimeout(() => {
           navigate(`/quiz-result/${quizData.quiz_attempt_id}`);
         }, 2500);
@@ -93,142 +96,228 @@ export default function Quiz() {
   const optionLabels = ['A', 'B', 'C', 'D', 'E'];
 
   return (
-    <div className="quiz-container animate-fade-in">
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <button className="btn btn-outline btn-sm" onClick={() => navigate('/concepts')}>
-          ← Voltar
-        </button>
-      </div>
+    <Box sx={{ animation: 'fadeIn 0.5s ease-out', maxWidth: 800, mx: 'auto', pb: 8 }}>
+      <Box sx={{ mb: 4 }}>
+        <Button 
+          variant="text" 
+          color="inherit" 
+          onClick={() => navigate('/concepts')}
+          startIcon={<ArrowLeft size={18} />}
+          sx={{ mb: 2, color: 'text.secondary' }}
+        >
+          Voltar
+        </Button>
+      </Box>
 
-      <div className="quiz-header">
-        <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
           📝 Quiz: {quizData.concept}
-        </h2>
-        <span className="quiz-progress-text">
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
           Questão {currentIndex + 1} de {questions.length}
-        </span>
-      </div>
+        </Typography>
+      </Box>
 
-      <ProgressBar
-        value={currentIndex + (feedback ? 1 : 0)}
-        max={questions.length}
-        showLabel={false}
-        height="6px"
-      />
+      <Box sx={{ mb: 4 }}>
+        <LinearProgress 
+          variant="determinate" 
+          value={((currentIndex + (feedback ? 1 : 0)) / questions.length) * 100} 
+          sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(148, 163, 184, 0.2)' }}
+        />
+      </Box>
 
-      <div className="question-card" style={{ marginTop: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-          <span className={`badge ${
-            currentQuestion.difficulty === 1 ? 'badge-success' :
-            currentQuestion.difficulty === 2 ? 'badge-warning' : 'badge-danger'
-          }`}>
-            {currentQuestion.difficulty === 1 ? '🟢 Fácil' :
-             currentQuestion.difficulty === 2 ? '🟡 Médio' : '🔴 Difícil'}
-          </span>
-          <span className="badge badge-primary">
-            {currentQuestion.question_type === 'multiple_choice' ? 'Múltipla Escolha' :
-             currentQuestion.question_type === 'true_false' ? 'V ou F' :
-             currentQuestion.question_type === 'fill_blank' ? 'Preenchimento' : 'Cálculo'}
-          </span>
-        </div>
-
-        <div className="question-statement">{currentQuestion.statement}</div>
-
-        {/* Options for MC and TF */}
-        {(currentQuestion.question_type === 'multiple_choice' || currentQuestion.question_type === 'true_false') && (
-          <div className="question-options">
-            {currentQuestion.options?.map((option, i) => (
-              <button
-                key={option.id}
-                className={`option-btn ${
-                  selectedAnswer === option.id ? 'selected' : ''
-                } ${
-                  feedback && option.text === feedback.correct_answer ? 'correct' : ''
-                } ${
-                  feedback && selectedAnswer === option.id && !feedback.is_correct ? 'incorrect' : ''
-                }`}
-                onClick={() => !feedback && setSelectedAnswer(option.id)}
-                disabled={!!feedback}
-              >
-                <span className="option-label">{optionLabels[i]}</span>
-                <span>{option.text}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Input for fill_blank and math_problem */}
-        {(currentQuestion.question_type === 'fill_blank' || currentQuestion.question_type === 'math_problem') && (
-          <div style={{ marginTop: 'var(--space-4)' }}>
-            <input
-              type="text"
-              className="form-input"
-              placeholder={currentQuestion.question_type === 'math_problem' ? 'Digite o resultado numérico...' : 'Digite sua resposta...'}
-              value={inputAnswer}
-              onChange={(e) => setInputAnswer(e.target.value)}
-              disabled={!!feedback}
-              style={{ fontSize: 'var(--font-size-lg)' }}
+      <Card sx={{ mb: 4, overflow: 'visible' }}>
+        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+            <Chip 
+              label={currentQuestion.difficulty === 1 ? 'Fácil' : currentQuestion.difficulty === 2 ? 'Médio' : 'Difícil'} 
+              color={currentQuestion.difficulty === 1 ? 'success' : currentQuestion.difficulty === 2 ? 'warning' : 'error'}
+              variant="outlined"
+              size="small"
+              sx={{ fontWeight: 700 }}
             />
-          </div>
-        )}
+            <Chip 
+              label={
+                currentQuestion.question_type === 'multiple_choice' ? 'Múltipla Escolha' :
+                currentQuestion.question_type === 'true_false' ? 'V ou F' :
+                currentQuestion.question_type === 'fill_blank' ? 'Preenchimento' : 'Cálculo'
+              } 
+              color="primary"
+              size="small"
+              sx={{ fontWeight: 600 }}
+            />
+          </Box>
 
-        {/* Hint */}
-        {!feedback && (
-          <div style={{ marginTop: 'var(--space-4)' }}>
-            <button className="btn btn-outline btn-sm" onClick={handleGetHint} disabled={hintUsed}>
-              💡 {hintUsed ? 'Dica usada (-5%)' : 'Pedir Dica (-5%)'}
-            </button>
-            {hint && (
-              <div style={{
-                marginTop: 'var(--space-3)', padding: 'var(--space-4)',
-                background: 'rgba(245, 158, 11, 0.1)', borderRadius: 'var(--radius-md)',
-                color: 'var(--warning-400)', fontSize: 'var(--font-size-sm)'
-              }}>
-                💡 {hint}
-              </div>
-            )}
-          </div>
-        )}
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 4, lineHeight: 1.6 }}>
+            {currentQuestion.statement}
+          </Typography>
 
-        {/* Feedback */}
-        {feedback && (
-          <div style={{
-            marginTop: 'var(--space-6)', padding: 'var(--space-5)',
-            background: feedback.is_correct ? 'rgba(0, 209, 119, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-            border: `1px solid ${feedback.is_correct ? 'rgba(0, 209, 119, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-            borderRadius: 'var(--radius-md)'
-          }}>
-            <div style={{ whiteSpace: 'pre-line', lineHeight: 1.8, color: 'var(--text-secondary)' }}>
-              {feedback.feedback}
-            </div>
-            {feedback.mastery_level !== undefined && (
-              <div style={{ marginTop: 'var(--space-3)' }}>
-                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>
-                  Domínio: {Math.round(feedback.mastery_level)}%
-                </span>
-                <ProgressBar value={feedback.mastery_level} variant="auto" showLabel={false} />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          {/* Options */}
+          {(currentQuestion.question_type === 'multiple_choice' || currentQuestion.question_type === 'true_false') && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {currentQuestion.options?.map((option, i) => {
+                const isSelected = selectedAnswer === option.id;
+                const isCorrectOption = feedback && option.text === feedback.correct_answer;
+                const isIncorrectSelected = feedback && isSelected && !feedback.is_correct;
+                
+                let borderColor = 'rgba(148, 163, 184, 0.2)';
+                let bgcolor = 'background.paper';
+                if (isSelected) {
+                  borderColor = 'primary.main';
+                  bgcolor = 'rgba(58, 129, 243, 0.05)';
+                }
+                if (isCorrectOption) {
+                  borderColor = 'success.main';
+                  bgcolor = 'rgba(16, 185, 129, 0.1)';
+                } else if (isIncorrectSelected) {
+                  borderColor = 'error.main';
+                  bgcolor = 'rgba(239, 68, 68, 0.1)';
+                }
 
-      {/* Actions */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-6)' }}>
+                return (
+                  <Button
+                    key={option.id}
+                    variant="outlined"
+                    onClick={() => !feedback && setSelectedAnswer(option.id)}
+                    disabled={!!feedback}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      p: 2,
+                      textAlign: 'left',
+                      borderColor: borderColor,
+                      bgcolor: bgcolor,
+                      borderWidth: 2,
+                      color: 'text.primary',
+                      '&:hover': {
+                        borderColor: feedback ? borderColor : 'primary.main',
+                        bgcolor: feedback ? bgcolor : 'rgba(58, 129, 243, 0.05)',
+                        borderWidth: 2,
+                      }
+                    }}
+                  >
+                    <Box sx={{ 
+                      width: 28, height: 28, borderRadius: '50%', 
+                      bgcolor: isSelected ? 'primary.main' : 'rgba(148, 163, 184, 0.1)', 
+                      color: isSelected ? '#fff' : 'text.secondary',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      mr: 2, fontWeight: 700, flexShrink: 0
+                    }}>
+                      {optionLabels[i]}
+                    </Box>
+                    <Typography variant="body1" sx={{ fontWeight: isSelected ? 600 : 400, flexGrow: 1 }}>
+                      {option.text}
+                    </Typography>
+                    {isCorrectOption && <CheckCircle2 color="#10b981" />}
+                    {isIncorrectSelected && <XCircle color="#ef4444" />}
+                  </Button>
+                );
+              })}
+            </Box>
+          )}
+
+          {/* Text Input */}
+          {(currentQuestion.question_type === 'fill_blank' || currentQuestion.question_type === 'math_problem') && (
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder={currentQuestion.question_type === 'math_problem' ? 'Ex: 15.5' : 'Digite sua resposta'}
+                value={inputAnswer}
+                onChange={(e) => setInputAnswer(e.target.value)}
+                disabled={!!feedback}
+                InputProps={{ sx: { fontSize: '1.2rem', py: 1 } }}
+              />
+            </Box>
+          )}
+
+          {/* Hint */}
+          {!feedback && (
+            <Box sx={{ mt: 4 }}>
+              <Button 
+                variant="text" 
+                color="warning" 
+                onClick={handleGetHint} 
+                disabled={hintUsed}
+                startIcon={<Lightbulb size={20} />}
+                sx={{ fontWeight: 600 }}
+              >
+                {hintUsed ? 'Dica usada (-5%)' : 'Pedir Dica (-5%)'}
+              </Button>
+              {hint && (
+                <Alert severity="warning" sx={{ mt: 2, '& .MuiAlert-message': { fontSize: '1rem' } }}>
+                  {hint}
+                </Alert>
+              )}
+            </Box>
+          )}
+
+          {/* Feedback Section */}
+          {feedback && (
+            <Alert 
+              severity={feedback.is_correct ? 'success' : 'error'} 
+              sx={{ mt: 4, '& .MuiAlert-message': { width: '100%' }, p: 3, borderRadius: 2 }}
+              iconMapping={{
+                success: <CheckCircle2 size={28} />,
+                error: <XCircle size={28} />
+              }}
+            >
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.8, fontSize: '1.1rem', mb: feedback.mastery_level !== undefined ? 3 : 0 }}>
+                {feedback.feedback}
+              </Typography>
+              {feedback.mastery_level !== undefined && (
+                <Box sx={{ width: '100%', mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>Atualização de Domínio</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>{Math.round(feedback.mastery_level)}%</Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={feedback.mastery_level} 
+                    sx={{ height: 6, borderRadius: 3 }} 
+                    color={feedback.is_correct ? 'success' : 'error'}
+                  />
+                </Box>
+              )}
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         {!feedback ? (
-          <button className="btn btn-primary btn-lg" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? 'Verificando...' : 'Confirmar Resposta'}
-          </button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            size="large" 
+            onClick={handleSubmit} 
+            disabled={submitting}
+            sx={{ px: 6, py: 1.5, fontSize: '1.1rem', borderRadius: 8 }}
+          >
+            {submitting ? <CircularProgress size={24} color="inherit" /> : 'Confirmar Resposta'}
+          </Button>
         ) : !feedback.is_quiz_complete ? (
-          <button className="btn btn-primary btn-lg" onClick={handleNext}>
-            Próxima Questão →
-          </button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            size="large" 
+            onClick={handleNext}
+            sx={{ px: 6, py: 1.5, fontSize: '1.1rem', borderRadius: 8 }}
+          >
+            Próxima Questão
+          </Button>
         ) : (
-          <button className="btn btn-accent btn-lg" onClick={() => navigate(`/quiz-result/${quizData.quiz_attempt_id}`)}>
-            Ver Resultado 🏆
-          </button>
+          <Button 
+            variant="contained" 
+            color="secondary" 
+            size="large" 
+            onClick={() => navigate(`/quiz-result/${quizData.quiz_attempt_id}`)}
+            sx={{ px: 6, py: 1.5, fontSize: '1.1rem', borderRadius: 8 }}
+          >
+            Ver Resultado Completo
+          </Button>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

@@ -3,14 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { conceptsAPI } from '../api/client';
 import AITutorChat from '../components/AITutorChat';
 import * as LucideIcons from 'lucide-react';
-import { BookOpen, Lightbulb, Key, FileEdit, Dumbbell } from 'lucide-react';
+import { BookOpen, Lightbulb, Key, FileEdit, Dumbbell, ArrowLeft } from 'lucide-react';
+import { Box, Typography, Button, Tabs, Tab, Card, CardContent, CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 export default function Lesson() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [concept, setConcept] = useState(null);
   const [lessons, setLessons] = useState([]);
-  const [activeTab, setActiveTab] = useState('theory');
+  const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,12 +25,29 @@ export default function Lesson() {
     }).catch(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
-  if (!concept) return <div className="empty-state"><h3>Conceito não encontrado</h3></div>;
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <CircularProgress />
+    </Box>
+  );
+
+  if (!concept) return (
+    <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Typography variant="h5" color="text.secondary">Conceito não encontrado</Typography>
+    </Box>
+  );
 
   const lesson = lessons[0] || {};
 
-  // Simple markdown renderer (handles ##, **, >, -, tables)
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  const processBold = (text) => {
+    const parts = text.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, i) => i % 2 === 1 ? <strong key={i} style={{ color: 'var(--mui-palette-primary-main)' }}>{part}</strong> : part);
+  };
+
   const renderContent = (text) => {
     if (!text) return null;
     const lines = text.split('\n');
@@ -38,46 +56,52 @@ export default function Lesson() {
     let tableRows = [];
 
     const processLine = (line, idx) => {
-      // Headers
-      if (line.startsWith('### ')) return <h3 key={idx}>{line.slice(4)}</h3>;
-      if (line.startsWith('## ')) return <h2 key={idx}>{line.slice(3)}</h2>;
-      if (line.startsWith('# ')) return <h1 key={idx}>{line.slice(2)}</h1>;
-      // Blockquote
-      if (line.startsWith('> ')) return <blockquote key={idx}>{processBold(line.slice(2))}</blockquote>;
-      // List item
-      if (line.startsWith('- ') || line.startsWith('* ')) return <li key={idx}>{processBold(line.slice(2))}</li>;
-      if (/^\d+\.\s/.test(line)) return <li key={idx}>{processBold(line.replace(/^\d+\.\s/, ''))}</li>;
-      // Empty line
-      if (line.trim() === '') return <br key={idx} />;
-      // Regular paragraph
-      return <p key={idx}>{processBold(line)}</p>;
+      if (line.startsWith('### ')) return <Typography key={idx} variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 700 }}>{line.slice(4)}</Typography>;
+      if (line.startsWith('## ')) return <Typography key={idx} variant="h5" sx={{ mt: 4, mb: 2, fontWeight: 800, color: 'primary.main' }}>{line.slice(3)}</Typography>;
+      if (line.startsWith('# ')) return <Typography key={idx} variant="h4" sx={{ mt: 4, mb: 3, fontWeight: 800 }}>{line.slice(2)}</Typography>;
+      if (line.startsWith('> ')) return (
+        <Box key={idx} sx={{ p: 2, my: 3, borderLeft: '4px solid', borderColor: 'secondary.main', bgcolor: 'rgba(0, 209, 119, 0.05)', borderRadius: '0 8px 8px 0' }}>
+          <Typography variant="body1" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>{processBold(line.slice(2))}</Typography>
+        </Box>
+      );
+      if (line.startsWith('- ') || line.startsWith('* ')) return (
+        <Box component="li" key={idx} sx={{ ml: 3, mb: 1 }}>
+          <Typography component="span" variant="body1" sx={{ lineHeight: 1.8 }}>{processBold(line.slice(2))}</Typography>
+        </Box>
+      );
+      if (/^\d+\.\s/.test(line)) return (
+        <Box component="li" key={idx} sx={{ ml: 3, mb: 1 }}>
+          <Typography component="span" variant="body1" sx={{ lineHeight: 1.8 }}>{processBold(line.replace(/^\d+\.\s/, ''))}</Typography>
+        </Box>
+      );
+      if (line.trim() === '') return <Box key={idx} sx={{ height: 16 }} />;
+      return <Typography key={idx} variant="body1" sx={{ mb: 2, lineHeight: 1.8, fontSize: '1.05rem', color: 'text.primary' }}>{processBold(line)}</Typography>;
     };
 
-    const processBold = (text) => {
-      const parts = text.split(/\*\*(.*?)\*\*/g);
-      return parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part);
-    };
-
-    // Handle table detection
     lines.forEach((line, idx) => {
       if (line.includes('|') && line.trim().startsWith('|')) {
-        if (!inTable) {
-          inTable = true;
-          tableRows = [];
-        }
-        if (!line.match(/^[\s|:-]+$/)) { // Skip separator rows
+        if (!inTable) { inTable = true; tableRows = []; }
+        if (!line.match(/^[\s|:-]+$/)) { 
           const cells = line.split('|').filter(c => c.trim());
           tableRows.push(cells.map(c => c.trim()));
         }
       } else {
         if (inTable) {
           elements.push(
-            <table key={`table-${idx}`}>
-              <thead><tr>{tableRows[0]?.map((c, i) => <th key={i}>{c}</th>)}</tr></thead>
-              <tbody>{tableRows.slice(1).map((row, ri) => (
-                <tr key={ri}>{row.map((c, ci) => <td key={ci}>{c}</td>)}</tr>
-              ))}</tbody>
-            </table>
+            <TableContainer component={Paper} key={`table-${idx}`} sx={{ my: 4, bgcolor: 'background.default', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+              <Table size="small">
+                <TableHead sx={{ bgcolor: 'rgba(58, 129, 243, 0.1)' }}>
+                  <TableRow>{tableRows[0]?.map((c, i) => <TableCell key={i} sx={{ fontWeight: 'bold' }}>{c}</TableCell>)}</TableRow>
+                </TableHead>
+                <TableBody>
+                  {tableRows.slice(1).map((row, ri) => (
+                    <TableRow key={ri} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      {row.map((c, ci) => <TableCell key={ci}>{c}</TableCell>)}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           );
           inTable = false;
           tableRows = [];
@@ -86,84 +110,113 @@ export default function Lesson() {
       }
     });
 
-    // Flush remaining table
     if (inTable && tableRows.length > 0) {
       elements.push(
-        <table key="table-final">
-          <thead><tr>{tableRows[0]?.map((c, i) => <th key={i}>{c}</th>)}</tr></thead>
-          <tbody>{tableRows.slice(1).map((row, ri) => (
-            <tr key={ri}>{row.map((c, ci) => <td key={ci}>{c}</td>)}</tr>
-          ))}</tbody>
-        </table>
+        <TableContainer component={Paper} key="table-final" sx={{ my: 4, bgcolor: 'background.default', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+          <Table size="small">
+            <TableHead sx={{ bgcolor: 'rgba(58, 129, 243, 0.1)' }}>
+              <TableRow>{tableRows[0]?.map((c, i) => <TableCell key={i} sx={{ fontWeight: 'bold' }}>{c}</TableCell>)}</TableRow>
+            </TableHead>
+            <TableBody>
+              {tableRows.slice(1).map((row, ri) => (
+                <TableRow key={ri} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  {row.map((c, ci) => <TableCell key={ci}>{c}</TableCell>)}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       );
     }
 
-    return elements;
+    return <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>{elements}</Box>;
   };
 
   return (
-    <div className="animate-fade-in">
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <button className="btn btn-outline btn-sm" onClick={() => navigate('/concepts')}>
-          ← Voltar aos Conceitos
-        </button>
-      </div>
+    <Box sx={{ animation: 'fadeIn 0.5s ease-out', maxWidth: 1000, mx: 'auto' }}>
+      <Box sx={{ mb: 4 }}>
+        <Button 
+          variant="text" 
+          color="inherit" 
+          onClick={() => navigate('/concepts')}
+          startIcon={<ArrowLeft size={18} />}
+          sx={{ mb: 2, color: 'text.secondary' }}
+        >
+          Voltar aos Conceitos
+        </Button>
+      </Box>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
-        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent-500)' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+        <Box sx={{ color: 'primary.main', display: 'flex' }}>
           {(() => {
             const Icon = LucideIcons[concept.icon] || LucideIcons.BookOpen;
-            return <Icon size={40} />;
+            return <Icon size={48} />;
           })()}
-        </span>
-        <div>
-          <h1 className="page-title">{concept.name}</h1>
-          <p className="page-subtitle">{concept.description}</p>
-        </div>
-      </div>
+        </Box>
+        <Box>
+          <Typography variant="h1" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, mb: 1 }}>{concept.name}</Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>{concept.description}</Typography>
+        </Box>
+      </Box>
 
       {/* Tabs */}
-      <div className="tabs">
-        <button className={`tab ${activeTab === 'theory' ? 'active' : ''}`} onClick={() => setActiveTab('theory')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BookOpen size={18} /> Aula Teórica
-        </button>
-        <button className={`tab ${activeTab === 'examples' ? 'active' : ''}`} onClick={() => setActiveTab('examples')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Lightbulb size={18} /> Exemplos Práticos
-        </button>
-        <button className={`tab ${activeTab === 'keypoints' ? 'active' : ''}`} onClick={() => setActiveTab('keypoints')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Key size={18} /> Pontos-Chave
-        </button>
-      </div>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+          <Tab icon={<BookOpen size={18} />} iconPosition="start" label="Aula Teórica" sx={{ fontWeight: 600, fontSize: '1rem', textTransform: 'none' }} />
+          <Tab icon={<Lightbulb size={18} />} iconPosition="start" label="Exemplos Práticos" sx={{ fontWeight: 600, fontSize: '1rem', textTransform: 'none' }} />
+          <Tab icon={<Key size={18} />} iconPosition="start" label="Pontos-Chave" sx={{ fontWeight: 600, fontSize: '1rem', textTransform: 'none' }} />
+        </Tabs>
+      </Box>
 
       {/* Content */}
-      <div className="lesson-content card" style={{ padding: 'var(--space-8)' }}>
-        {activeTab === 'theory' && renderContent(lesson.content)}
-        {activeTab === 'examples' && renderContent(lesson.practical_examples)}
-        {activeTab === 'keypoints' && (
-          <div>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Key size={24} className="text-accent" /> Pontos-Chave</h2>
-            <ul>
-              {lesson.key_points?.split(';').map((point, i) => (
-                <li key={i} style={{ marginBottom: 'var(--space-3)', fontSize: 'var(--font-size-lg)' }}>
-                  {point.trim()}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <Card sx={{ mb: 6 }}>
+        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+          {activeTab === 0 && renderContent(lesson.content)}
+          {activeTab === 1 && renderContent(lesson.practical_examples)}
+          {activeTab === 2 && (
+            <Box>
+              <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, fontWeight: 800, color: 'primary.main' }}>
+                <Key size={28} /> Pontos-Chave
+              </Typography>
+              <Box component="ul" sx={{ pl: 2 }}>
+                {lesson.key_points?.split(';').map((point, i) => (
+                  <Box component="li" key={i} sx={{ mb: 2, pl: 1 }}>
+                    <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
+                      {point.trim()}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: 'var(--space-6)', justifyContent: 'center' }}>
-        <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${slug}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FileEdit size={20} /> Fazer Quiz
-        </button>
-        <button className="btn btn-outline btn-lg" onClick={() => navigate(`/exercises/${slug}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Dumbbell size={20} /> Exercícios
-        </button>
-      </div>
+      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 8, flexWrap: 'wrap' }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          size="large" 
+          onClick={() => navigate(`/quiz/${slug}`)} 
+          startIcon={<FileEdit size={22} />}
+          sx={{ py: 1.5, px: 4, fontSize: '1.1rem' }}
+        >
+          Fazer Quiz
+        </Button>
+        <Button 
+          variant="outlined" 
+          color="primary" 
+          size="large" 
+          onClick={() => navigate(`/exercises/${slug}`)} 
+          startIcon={<Dumbbell size={22} />}
+          sx={{ py: 1.5, px: 4, fontSize: '1.1rem' }}
+        >
+          Exercícios
+        </Button>
+      </Box>
 
       <AITutorChat conceptSlug={slug} />
-    </div>
+    </Box>
   );
 }

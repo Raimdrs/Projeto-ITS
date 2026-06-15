@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Wallet } from 'lucide-react';
+import { Container, Box, Card, CardContent, Typography, TextField, Button, Alert, Link, CircularProgress } from '@mui/material';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -26,58 +27,72 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container animate-fade-in">
-        <div className="auth-card">
-          <div className="auth-logo">
-            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center', color: 'var(--accent-400)' }}><Wallet size={48} /></div>
-            <h1>FinTutor</h1>
-            <p>Educação Financeira Inteligente</p>
-          </div>
+    <Container component="main" maxWidth="xs">
+      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <Card sx={{ width: '100%', p: 2 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ color: 'primary.main', mb: 1 }}>
+                <Wallet size={48} />
+              </Box>
+              <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
+                FinTutor
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Educação Financeira Inteligente
+              </Typography>
+            </Box>
 
-          {error && <div className="auth-error">{error}</div>}
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="login-username">Usuário</label>
-              <input
-                id="login-username"
-                type="text"
-                className="form-input"
-                placeholder="Seu nome de usuário"
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Usuário"
+                name="username"
+                autoComplete="username"
+                autoFocus
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required
               />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="login-password">Senha</label>
-              <input
-                id="login-password"
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Senha"
                 type="password"
-                className="form-input"
-                placeholder="Sua senha"
+                id="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                sx={{ mb: 3 }}
               />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full btn-lg"
-              disabled={loading}
-            >
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-
-          <div className="auth-footer">
-            Não tem conta? <Link to="/register">Cadastre-se</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{ py: 1.5, mb: 2 }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
+              </Button>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Não tem conta?{' '}
+                  <Link component={RouterLink} to="/register" color="primary" sx={{ fontWeight: 600, textDecoration: 'none' }}>
+                    Cadastre-se
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 }

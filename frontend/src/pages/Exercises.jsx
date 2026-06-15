@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { quizAPI } from '../api/client';
-import { Dumbbell, FileEdit } from 'lucide-react';
+import { Box, Typography, Button, Card, CardContent, CircularProgress, Chip, Stack } from '@mui/material';
+import { Dumbbell, FileEdit, ArrowLeft } from 'lucide-react';
 
 export default function Exercises() {
   const { slug } = useParams();
@@ -16,62 +17,107 @@ export default function Exercises() {
     }).catch(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <CircularProgress />
+    </Box>
+  );
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <button className="btn btn-outline btn-sm" onClick={() => navigate(`/concept/${slug}`)}>
-          ← Voltar à Aula
-        </button>
-      </div>
+    <Box sx={{ animation: 'fadeIn 0.5s ease-out', maxWidth: 800, mx: 'auto', pb: 8 }}>
+      <Box sx={{ mb: 4 }}>
+        <Button 
+          variant="text" 
+          color="inherit" 
+          onClick={() => navigate(`/concept/${slug}`)}
+          startIcon={<ArrowLeft size={18} />}
+          sx={{ mb: 2, color: 'text.secondary' }}
+        >
+          Voltar à Aula
+        </Button>
+      </Box>
 
-      <div className="page-header">
-        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Dumbbell size={32} className="text-accent" /> Exercícios
-        </h1>
-        <p className="page-subtitle">{questions.length} questões disponíveis</p>
-      </div>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 800, mb: 1 }}>
+          <Dumbbell size={36} color="#3a81f3" /> Exercícios
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" sx={{ ml: 6 }}>
+          {questions.length} questões disponíveis no banco
+        </Typography>
+      </Box>
 
-      <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
-        <button className="btn btn-primary btn-lg" onClick={() => navigate(`/quiz/${slug}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FileEdit size={20} /> Iniciar Quiz Adaptativo (5 questões)
-        </button>
-      </div>
+      <Box sx={{ mb: 6 }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          size="large" 
+          onClick={() => navigate(`/quiz/${slug}`)} 
+          startIcon={<FileEdit size={22} />}
+          sx={{ py: 1.5, px: 4, fontSize: '1.1rem', borderRadius: 8 }}
+        >
+          Iniciar Quiz Adaptativo (5 questões)
+        </Button>
+      </Box>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <Stack spacing={3}>
         {questions.map((q, i) => (
-          <div key={q.id} className="card" style={{ cursor: 'default' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
-              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>Questão {i + 1}</span>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <span className={`badge ${q.difficulty === 1 ? 'badge-success' : q.difficulty === 2 ? 'badge-warning' : 'badge-danger'}`}>
-                  {q.difficulty === 1 ? 'Fácil' : q.difficulty === 2 ? 'Médio' : 'Difícil'}
-                </span>
-                <span className="badge badge-primary">
-                  {q.question_type === 'multiple_choice' ? 'ME' :
-                   q.question_type === 'true_false' ? 'V/F' :
-                   q.question_type === 'fill_blank' ? 'Preench.' : 'Cálculo'}
-                </span>
-              </div>
-            </div>
-            <p style={{ fontSize: 'var(--font-size-base)', lineHeight: 1.7 }}>{q.statement}</p>
-            {q.options?.length > 0 && (
-              <div style={{ marginTop: 'var(--space-3)' }}>
-                {q.options.map((opt, j) => (
-                  <div key={opt.id} style={{
-                    padding: 'var(--space-2) var(--space-3)', marginBottom: 'var(--space-1)',
-                    fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)',
-                    background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)'
-                  }}>
-                    {String.fromCharCode(65 + j)}) {opt.text}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <Card key={q.id} variant="outlined" sx={{ borderColor: 'rgba(148, 163, 184, 0.2)' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Questão {i + 1}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Chip 
+                    label={q.difficulty === 1 ? 'Fácil' : q.difficulty === 2 ? 'Médio' : 'Difícil'} 
+                    color={q.difficulty === 1 ? 'success' : q.difficulty === 2 ? 'warning' : 'error'}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Chip 
+                    label={
+                      q.question_type === 'multiple_choice' ? 'ME' :
+                      q.question_type === 'true_false' ? 'V/F' :
+                      q.question_type === 'fill_blank' ? 'Preench.' : 'Cálculo'
+                    }
+                    color="primary"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </Box>
+              </Box>
+              
+              <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.6, mb: q.options?.length > 0 ? 3 : 0 }}>
+                {q.statement}
+              </Typography>
+              
+              {q.options?.length > 0 && (
+                <Stack spacing={1}>
+                  {q.options.map((opt, j) => (
+                    <Box key={opt.id} sx={{ 
+                      p: 1.5, 
+                      bgcolor: 'background.default', 
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      display: 'flex',
+                      gap: 2
+                    }}>
+                      <Typography sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                        {String.fromCharCode(65 + j)})
+                      </Typography>
+                      <Typography>
+                        {opt.text}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 }

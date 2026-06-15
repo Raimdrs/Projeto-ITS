@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Wallet } from 'lucide-react';
+import { Container, Box, Card, CardContent, Typography, TextField, Button, Alert, Link, CircularProgress, Grid } from '@mui/material';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -42,65 +43,119 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container animate-fade-in">
-        <div className="auth-card">
-          <div className="auth-logo">
-            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center', color: 'var(--accent-400)' }}><Wallet size={48} /></div>
-            <h1>FinTutor</h1>
-            <p>Crie sua conta e comece a aprender</p>
-          </div>
+    <Container component="main" maxWidth="sm">
+      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+        <Card sx={{ width: '100%', p: 2 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ color: 'primary.main', mb: 1 }}>
+                <Wallet size={48} />
+              </Box>
+              <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
+                FinTutor
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Crie sua conta e comece a aprender
+              </Typography>
+            </Box>
 
-          {error && <div className="auth-error">{error}</div>}
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label" htmlFor="reg-firstname">Nome</label>
-                <input id="reg-firstname" type="text" name="first_name" className="form-input"
-                  placeholder="Seu nome" value={form.first_name} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="reg-lastname">Sobrenome</label>
-                <input id="reg-lastname" type="text" name="last_name" className="form-input"
-                  placeholder="Seu sobrenome" value={form.last_name} onChange={handleChange} />
-              </div>
-            </div>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    id="first_name"
+                    label="Nome"
+                    name="first_name"
+                    value={form.first_name}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    id="last_name"
+                    label="Sobrenome"
+                    name="last_name"
+                    value={form.last_name}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    id="username"
+                    label="Usuário"
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    id="email"
+                    label="E-mail"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    name="password"
+                    label="Senha"
+                    type="password"
+                    id="password"
+                    value={form.password}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    name="password_confirm"
+                    label="Confirmar Senha"
+                    type="password"
+                    id="password_confirm"
+                    value={form.password_confirm}
+                    onChange={handleChange}
+                  />
+                </Grid>
+              </Grid>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="reg-username">Usuário</label>
-              <input id="reg-username" type="text" name="username" className="form-input"
-                placeholder="Escolha um nome de usuário" value={form.username} onChange={handleChange} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="reg-email">E-mail</label>
-              <input id="reg-email" type="email" name="email" className="form-input"
-                placeholder="seu@email.com" value={form.email} onChange={handleChange} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="reg-password">Senha</label>
-              <input id="reg-password" type="password" name="password" className="form-input"
-                placeholder="Mínimo 6 caracteres" value={form.password} onChange={handleChange} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="reg-confirm">Confirmar Senha</label>
-              <input id="reg-confirm" type="password" name="password_confirm" className="form-input"
-                placeholder="Repita a senha" value={form.password_confirm} onChange={handleChange} required />
-            </div>
-
-            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
-              {loading ? 'Cadastrando...' : 'Criar Conta'}
-            </button>
-          </form>
-
-          <div className="auth-footer">
-            Já tem conta? <Link to="/login">Entrar</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{ py: 1.5, mt: 4, mb: 2 }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Criar Conta'}
+              </Button>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Já tem conta?{' '}
+                  <Link component={RouterLink} to="/login" color="primary" sx={{ fontWeight: 600, textDecoration: 'none' }}>
+                    Entrar
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 }

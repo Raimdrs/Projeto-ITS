@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../api/client';
+import { Box, Typography, Grid, Card, CardContent, TextField, Button, Alert, CircularProgress } from '@mui/material';
+import { User, Lock } from 'lucide-react';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -9,6 +11,7 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     authAPI.getProfile().then(res => {
@@ -20,7 +23,8 @@ export default function Profile() {
         bio: data.bio || '',
         phone: data.phone || '',
       });
-    }).catch(() => {});
+      setFetching(false);
+    }).catch(() => setFetching(false));
   }, []);
 
   const handleSave = async (e) => {
@@ -53,65 +57,116 @@ export default function Profile() {
     }
   };
 
+  if (fetching) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <CircularProgress />
+    </Box>
+  );
+
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '700px', margin: '0 auto' }}>
-      <div className="page-header">
-        <h1 className="page-title">Perfil</h1>
-        <p className="page-subtitle">Gerencie suas informações pessoais</p>
-      </div>
+    <Box sx={{ animation: 'fadeIn 0.5s ease-out', maxWidth: 800, mx: 'auto', pb: 8 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: { xs: '2rem', md: '2.5rem' } }}>
+          Perfil
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Gerencie suas informações pessoais
+        </Typography>
+      </Box>
 
-      {message && (
-        <div style={{ background: 'rgba(0,209,119,0.1)', border: '1px solid rgba(0,209,119,0.3)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3) var(--space-4)', marginBottom: 'var(--space-5)', color: 'var(--accent-400)', fontSize: 'var(--font-size-sm)' }}>
-          ✅ {message}
-        </div>
-      )}
-      {error && <div className="auth-error">{error}</div>}
+      {message && <Alert severity="success" sx={{ mb: 4 }}>{message}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>}
 
-      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
-        <h3 style={{ marginBottom: 'var(--space-5)', fontWeight: 700 }}>👤 Dados Pessoais</h3>
-        <form onSubmit={handleSave}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <div className="form-group">
-              <label className="form-label">Nome</label>
-              <input type="text" className="form-input" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Sobrenome</label>
-              <input type="text" className="form-input" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">E-mail</label>
-            <input type="email" className="form-input" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Bio</label>
-            <textarea className="form-input" rows={3} value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Telefone</label>
-            <input type="text" className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
-          </button>
-        </form>
-      </div>
+      <Card sx={{ mb: 6 }}>
+        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <User size={20} color="#3a81f3" /> Dados Pessoais
+          </Typography>
+          
+          <Box component="form" onSubmit={handleSave}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField 
+                  fullWidth label="Nome" variant="outlined" 
+                  value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField 
+                  fullWidth label="Sobrenome" variant="outlined" 
+                  value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField 
+                  fullWidth label="E-mail" type="email" variant="outlined" 
+                  value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField 
+                  fullWidth label="Bio" multiline rows={3} variant="outlined" 
+                  value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField 
+                  fullWidth label="Telefone" variant="outlined" 
+                  value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  size="large" 
+                  disabled={loading}
+                  sx={{ py: 1.5, px: 4 }}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Salvar Alterações'}
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </CardContent>
+      </Card>
 
-      <div className="card">
-        <h3 style={{ marginBottom: 'var(--space-5)', fontWeight: 700 }}>🔒 Alterar Senha</h3>
-        <form onSubmit={handleChangePassword}>
-          <div className="form-group">
-            <label className="form-label">Senha Atual</label>
-            <input type="password" className="form-input" value={passwordForm.old_password} onChange={e => setPasswordForm({ ...passwordForm, old_password: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Nova Senha</label>
-            <input type="password" className="form-input" value={passwordForm.new_password} onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })} required />
-          </div>
-          <button type="submit" className="btn btn-outline">Alterar Senha</button>
-        </form>
-      </div>
-    </div>
+      <Card>
+        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Lock size={20} color="#3a81f3" /> Alterar Senha
+          </Typography>
+          
+          <Box component="form" onSubmit={handleChangePassword}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12 }}>
+                <TextField 
+                  fullWidth label="Senha Atual" type="password" variant="outlined" required
+                  value={passwordForm.old_password} onChange={e => setPasswordForm({ ...passwordForm, old_password: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField 
+                  fullWidth label="Nova Senha" type="password" variant="outlined" required
+                  value={passwordForm.new_password} onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })} 
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Button 
+                  type="submit" 
+                  variant="outlined" 
+                  color="primary" 
+                  size="large" 
+                  sx={{ py: 1.5, px: 4 }}
+                >
+                  Alterar Senha
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

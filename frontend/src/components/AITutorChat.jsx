@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, User, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Bot, X, Send, User, Sparkles } from 'lucide-react';
 import { tutorAPI } from '../api/client';
+import { Box, Paper, IconButton, Typography, TextField, Fab, CircularProgress, Avatar } from '@mui/material';
 
 export default function AITutorChat({ conceptSlug }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,8 +31,6 @@ export default function AITutorChat({ conceptSlug }) {
     setLoading(true);
 
     try {
-      // Create history array without the initial greeting if it's not strictly necessary, 
-      // but Gemini handles it fine.
       const history = messages.map(m => ({ role: m.role, text: m.text }));
       
       const response = await tutorAPI.chat({
@@ -50,10 +49,10 @@ export default function AITutorChat({ conceptSlug }) {
   };
 
   return (
-    <div style={{
+    <Box sx={{
       position: 'fixed',
-      bottom: '24px',
-      right: '24px',
+      bottom: 24,
+      right: 24,
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
@@ -61,161 +60,139 @@ export default function AITutorChat({ conceptSlug }) {
     }}>
       {/* Chat Window */}
       {isOpen && (
-        <div style={{
-          width: '350px',
-          height: '500px',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--border)',
+        <Paper elevation={6} sx={{
+          width: 350,
+          height: 500,
           display: 'flex',
           flexDirection: 'column',
-          marginBottom: '16px',
+          mb: 2,
           overflow: 'hidden',
+          borderRadius: 3,
           animation: 'slideUp 0.3s ease-out'
         }}>
           {/* Header */}
-          <div style={{
-            padding: 'var(--space-4)',
-            backgroundColor: 'var(--accent-500)',
-            color: 'white',
+          <Box sx={{
+            p: 2,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Bot size={24} />
-              <span style={{ fontWeight: 600 }}>Tutor IA</span>
-            </div>
-            <button 
-              onClick={() => setIsOpen(false)}
-              style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}
-            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Tutor IA</Typography>
+            </Box>
+            <IconButton onClick={() => setIsOpen(false)} size="small" sx={{ color: 'inherit' }}>
               <X size={20} />
-            </button>
-          </div>
+            </IconButton>
+          </Box>
 
           {/* Messages */}
-          <div style={{
+          <Box sx={{
             flex: 1,
             overflowY: 'auto',
-            padding: 'var(--space-4)',
+            p: 2,
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px'
+            gap: 2,
+            bgcolor: 'background.default'
           }}>
             {messages.map((msg, i) => (
-              <div key={i} style={{
+              <Box key={i} sx={{
                 display: 'flex',
                 flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                gap: '8px',
+                gap: 1.5,
                 alignItems: 'flex-start'
               }}>
-                <div style={{
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  backgroundColor: msg.role === 'user' ? 'var(--primary-500)' : 'var(--accent-500)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
-                  flexShrink: 0
+                <Avatar sx={{ 
+                  width: 32, height: 32, 
+                  bgcolor: msg.role === 'user' ? 'primary.main' : 'secondary.main',
+                  color: 'white'
                 }}>
-                  {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-                </div>
-                <div style={{
-                  backgroundColor: msg.role === 'user' ? 'var(--primary-50)' : 'var(--bg-input)',
-                  color: msg.role === 'user' ? 'var(--primary-900)' : 'var(--text-primary)',
-                  padding: '10px 14px',
-                  borderRadius: '16px',
-                  borderTopRightRadius: msg.role === 'user' ? '4px' : '16px',
-                  borderTopLeftRadius: msg.role === 'model' ? '4px' : '16px',
-                  maxWidth: '85%',
-                  fontSize: '0.9rem',
-                  lineHeight: 1.5
+                  {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
+                </Avatar>
+                
+                <Box sx={{
+                  bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper',
+                  color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
+                  p: 1.5,
+                  borderRadius: 2,
+                  borderTopRightRadius: msg.role === 'user' ? 0 : 8,
+                  borderTopLeftRadius: msg.role === 'model' ? 0 : 8,
+                  maxWidth: '80%',
+                  border: msg.role === 'model' ? '1px solid' : 'none',
+                  borderColor: 'divider',
+                  boxShadow: 1
                 }}>
-                  {msg.text}
-                </div>
-              </div>
+                  <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+                    {msg.text}
+                  </Typography>
+                </Box>
+              </Box>
             ))}
             {loading && (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
-                <Bot size={16} />
-                <span style={{ fontSize: '0.9rem' }}>Pensando...</span>
-              </div>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', color: 'text.secondary', ml: 1 }}>
+                <CircularProgress size={16} color="inherit" />
+                <Typography variant="caption">Pensando...</Typography>
+              </Box>
             )}
             <div ref={messagesEndRef} />
-          </div>
+          </Box>
 
           {/* Input */}
-          <form onSubmit={handleSend} style={{
-            padding: 'var(--space-3)',
-            borderTop: '1px solid var(--border)',
+          <Box component="form" onSubmit={handleSend} sx={{
+            p: 2,
+            borderTop: 1,
+            borderColor: 'divider',
             display: 'flex',
-            gap: '8px',
-            backgroundColor: 'var(--bg-card)'
+            gap: 1,
+            bgcolor: 'background.paper'
           }}>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              size="small"
+              variant="outlined"
+              placeholder="Digite sua dúvida..."
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Digite sua dúvida ou peça um teste..."
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                border: '1px solid var(--border)',
-                borderRadius: '20px',
-                outline: 'none',
-                backgroundColor: 'var(--bg-input)',
-                color: 'var(--text-primary)',
-                fontSize: '0.9rem'
-              }}
               disabled={loading}
+              InputProps={{
+                sx: { borderRadius: 4, bgcolor: 'background.default' }
+              }}
             />
-            <button
+            <IconButton
               type="submit"
+              color="primary"
               disabled={loading || !input.trim()}
-              style={{
-                backgroundColor: 'var(--accent-500)',
+              sx={{ 
+                bgcolor: 'primary.main', 
                 color: 'white',
-                border: 'none',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer',
-                opacity: (loading || !input.trim()) ? 0.6 : 1
+                '&:hover': { bgcolor: 'primary.dark' },
+                '&.Mui-disabled': { bgcolor: 'action.disabledBackground', color: 'action.disabled' }
               }}
             >
               <Send size={18} />
-            </button>
-          </form>
-        </div>
+            </IconButton>
+          </Box>
+        </Paper>
       )}
 
       {/* Floating Button */}
       {!isOpen && (
-        <button
+        <Fab 
+          color="secondary" 
+          aria-label="chat" 
           onClick={() => setIsOpen(true)}
-          style={{
-            backgroundColor: 'var(--accent-500)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '60px',
-            height: '60px',
-            boxShadow: 'var(--shadow-lg)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-            animation: 'pulse 2s infinite'
+          sx={{ 
+            width: 60, height: 60,
+            animation: 'pulse 2s infinite',
+            '&:hover': { transform: 'scale(1.1)', transition: 'transform 0.2s' }
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <Sparkles size={28} />
-        </button>
+        </Fab>
       )}
-    </div>
+    </Box>
   );
 }
