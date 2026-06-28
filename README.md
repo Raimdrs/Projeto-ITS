@@ -5,6 +5,11 @@ O **FinTutor** é um Sistema Tutor Inteligente (ITS) de alto nível projetado pa
 Diferente de um curso tradicional, a plataforma monitora o domínio de cada conceito matemático e teórico do aluno, exigindo proficiência para desbloquear novos módulos. O sistema também conta com simulações financeiras em tempo real (Juros Compostos, ZBB, etc.) e um Tutor Virtual integrado via API do Google Gemini.
 
 ---
+### 👥 Desenvolvedores / Equipe:
+* Luiz Eduardo Batista De Lima
+* Maria Leticia De Moura Silva
+* Rai De Medeiros Cunha
+* Thyago Pereira Da Silva
 
 ## 🛠 Tecnologias Utilizadas
 
